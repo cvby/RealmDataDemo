@@ -18,13 +18,27 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    [self deleteData];
+    NSDate* tmpStartData = [NSDate date];
+    [self testBigData];
+    double deltaTime = [[NSDate date] timeIntervalSinceDate:tmpStartData];
+    NSLog(@">>>>>>>>>>cost time = %f ms", deltaTime*1000);
+    // Do any additional setup after loading the view, typically from a nib.
+}
+
+-(void)testSmallData{
     //[self createData];
     [self createDataWithBlock];
     [self loadData];
     
-    [self deleteData];
+    //[self deleteData];
+    [self updateData];
     [self loadData];
-    // Do any additional setup after loading the view, typically from a nib.
+}
+
+-(void)testBigData{
+    [self createBigData];
+    //[self loadData];
 }
 
 -(ProvinceEntity*)createModel:(NSArray*)array{
@@ -83,16 +97,114 @@
 -(void)loadData{
     RLMResults<ProvinceEntity *>* province=[ProvinceEntity allObjects];
     NSLog(@"%@",province.lastObject);
-    
 }
 
 -(void)deleteData{
     [RealmHelper deleteWithArray:@"ProvinceEntity"];
 }
 
+-(void)updateData{
+    RLMResults<ProvinceEntity *>* provinceArray=[ProvinceEntity allObjects];
+    [[RLMRealm defaultRealm] transactionWithBlock:^{
+        ProvinceEntity *province=[provinceArray firstObject];
+        province.shortName=@"浙江";
+    }];
+}
+
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+
+-(void)createBigData{
+    NSString *JSONFilePath = [[NSBundle mainBundle]pathForResource:@"ChinaCityInfo" ofType:@"json"];
+    NSString *JSONContent = [NSString stringWithContentsOfFile:JSONFilePath encoding:NSUTF8StringEncoding error:nil];
+    NSData *JSONData = [JSONContent dataUsingEncoding:NSUTF8StringEncoding];
+    
+    NSDictionary *JSONResult = [NSJSONSerialization JSONObjectWithData:JSONData options:NSJSONReadingMutableContainers error:nil];
+    NSArray *JSONArr  = JSONResult[@"rows"];
+    //一次性存入 -- JSONArr 有序 (根据json文件  可知:数组中排列必然是  省市区)
+    
+//    NSMutableDictionary *dic = [[NSMutableDictionary dictionary] mutableCopy];
+//    //字典套字典(存放省市)
+//    [dic setValue:[[NSMutableDictionary dictionary] mutableCopy] forKey:@"sheng"];
+//    [dic setValue:[[NSMutableDictionary dictionary] mutableCopy] forKey:@"shi"];
+    
+    for (NSDictionary *dcInfo in JSONArr){
+        //省
+        NSNumber *nType = [dcInfo objectForKey:@"Type"];
+        if (nType) {
+            switch ([nType integerValue]) {
+                    
+                case 2://省
+                {
+                    ProvinceEntity *province = [[ProvinceEntity alloc]init];
+                    
+                    province.sId =(int)dcInfo[@"Id"];
+                    province.pid = (int)dcInfo[@"Pid"];
+                    province.type = (int)dcInfo[@"Type"];
+                    province.shortName = dcInfo[@"Name"];
+                    province.enName = dcInfo[@"EnName"];
+                    province.prefixLetter = dcInfo[@"PrefixLetter"];
+                    
+                    //先把市存好
+                    [[RLMRealm defaultRealm] transactionWithBlock:^{
+                        [[RLMRealm defaultRealm] addObject:province];
+                    }];
+                }
+                    break;
+                    
+                case 3://市
+                {
+                    CityEntity *city = [[CityEntity alloc]init];
+                    
+                    city.sId =(int)dcInfo[@"Id"];
+                    city.pid = (int)dcInfo[@"Pid"];
+                    city.type = (int)dcInfo[@"Type"];
+                    city.shortName = dcInfo[@"Name"];
+                    city.enName = dcInfo[@"EnName"];
+                    city.prefixLetter = dcInfo[@"PrefixLetter"];
+                    
+                    
+                    RLMResults<ProvinceEntity *>* provinceArray=[ProvinceEntity objectsWhere:@"sId==%d",city.pid];
+                    if(provinceArray&&[provinceArray firstObject])
+                    {
+                        ProvinceEntity* province=[provinceArray firstObject];
+                        [[RLMRealm defaultRealm] transactionWithBlock:^{
+                            [province.citys addObject:city];
+                        }];
+                    }
+                }
+                    break;
+                    
+                case 4://区
+                {
+                    AreaEntity *area = [[AreaEntity alloc]init];;
+                    area.sId =(int)dcInfo[@"Id"];
+                    area.pid = (int)dcInfo[@"Pid"];
+                    area.type = (int)dcInfo[@"Type"];
+                    area.shortName = dcInfo[@"Name"];
+                    area.enName = dcInfo[@"EnName"];
+                    area.prefixLetter = dcInfo[@"PrefixLetter"];
+                    
+                    
+                    RLMResults<CityEntity *>* cityArray=[ProvinceEntity objectsWhere:@" sId == %d",area.pid];
+                    if(cityArray&&[cityArray firstObject])
+                    {
+                        CityEntity* city=[cityArray firstObject];
+                        [[RLMRealm defaultRealm] transactionWithBlock:^{
+                            [city.areas addObject:area];
+                        }];
+                    }
+                    
+                }
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
 }
 
 @end
