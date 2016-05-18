@@ -10,7 +10,8 @@
 
 @implementation RealmHelper
 
-+(void)deleteWithArray:(RLMResults*)result{
++(void)deleteWithArray:(NSString*)objectClassName{
+    RLMResults* result=[[RLMRealm defaultRealm] allObjects:objectClassName];
     [[RLMRealm defaultRealm] transactionWithBlock:^{
         [[RLMRealm defaultRealm] deleteObjects:result];
     }];

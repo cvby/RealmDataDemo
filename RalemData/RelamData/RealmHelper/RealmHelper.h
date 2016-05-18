@@ -8,9 +8,10 @@
 
 #import <Foundation/Foundation.h>
 #import <Realm/Realm.h>
+#import <Realm/RLMRealm_Dynamic.h>
 
 @interface RealmHelper : NSObject
 
-+(void)deleteWithArray:(RLMResults*)result;
++(void)deleteWithArray:(NSString*)objectClassName;
 
 @end

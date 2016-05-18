@@ -87,8 +87,7 @@
 }
 
 -(void)deleteData{
-    RLMResults<ProvinceEntity *>* province=[ProvinceEntity allObjects];
-    [RealmHelper deleteWithArray:province];
+    [RealmHelper deleteWithArray:@"ProvinceEntity"];
 }
 
 - (void)didReceiveMemoryWarning {
