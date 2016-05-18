@@ -23,3 +23,5 @@ RLM_ARRAY_TYPE(AreaEntity)
 //@property ProvinceEntity *inProvince;
 
 @end
+
+//RLM_ARRAY_TYPE(CityEntity)申明可以放置在最后

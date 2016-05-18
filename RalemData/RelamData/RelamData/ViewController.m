@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #import "ProvinceEntity.h"
+#import "RealmHelper.h"
 
 @interface ViewController ()
 
@@ -19,6 +20,9 @@
     [super viewDidLoad];
     //[self createData];
     [self createDataWithBlock];
+    [self loadData];
+    
+    [self deleteData];
     [self loadData];
     // Do any additional setup after loading the view, typically from a nib.
 }
@@ -70,6 +74,7 @@
 
 -(void)createDataWithBlock{
     ProvinceEntity* province=[self createModel:@[@"徐州",@"淮安",@"南京",@"扬州",@"盐城",@"南通",@"连云港"]];
+    //这里的block只是一个代码块，不存在异步问题
     [[RLMRealm defaultRealm] transactionWithBlock:^{
         [[RLMRealm defaultRealm] addObject:province];
     }];
@@ -79,6 +84,11 @@
     RLMResults<ProvinceEntity *>* province=[ProvinceEntity allObjects];
     NSLog(@"%@",province.lastObject);
     
+}
+
+-(void)deleteData{
+    RLMResults<ProvinceEntity *>* province=[ProvinceEntity allObjects];
+    [RealmHelper deleteWithArray:province];
 }
 
 - (void)didReceiveMemoryWarning {
