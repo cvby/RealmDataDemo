@@ -10,10 +10,24 @@
 
 @implementation RealmHelper
 
-+(void)deleteWithArray:(NSString*)objectClassName{
++(void)deleteWithAll:(NSString*)objectClassName{
     RLMResults* result=[[RLMRealm defaultRealm] allObjects:objectClassName];
     [[RLMRealm defaultRealm] transactionWithBlock:^{
         [[RLMRealm defaultRealm] deleteObjects:result];
+    }];
+}
+
++(void)updataObject:(NSString*)objectClassName where:(NSString *)predicateFormat Block:(void(^)(RLMResults* result))block{
+    RLMResults* result=nil;
+    if(predicateFormat.length>0)
+    {
+        result=[[RLMRealm defaultRealm] objects:objectClassName where:predicateFormat];
+    }else
+    {
+        result=[[RLMRealm defaultRealm] allObjects:objectClassName];
+    }
+    [[RLMRealm defaultRealm] transactionWithBlock:^{
+        block(result);
     }];
 }
 

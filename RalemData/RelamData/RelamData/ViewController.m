@@ -19,16 +19,18 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     [self deleteData];
-    NSDate* tmpStartData = [NSDate date];
-    [self testBigData];
-    double deltaTime = [[NSDate date] timeIntervalSinceDate:tmpStartData];
-    NSLog(@">>>>>>>>>>cost time = %f ms", deltaTime*1000);
     
-    NSDate* searchStartData = [NSDate date];
-    [self loadData];
-    double endTime = [[NSDate date] timeIntervalSinceDate:searchStartData];
-    NSLog(@">>>>>>>>>>cost time = %f ms", endTime*1000);
-    // Do any additional setup after loading the view, typically from a nib.
+    [self testSmallData];
+    
+//    NSDate* tmpStartData = [NSDate date];
+//    [self testBigData];
+//    double deltaTime = [[NSDate date] timeIntervalSinceDate:tmpStartData];
+//    NSLog(@">>>>>>>>>>cost time = %f ms", deltaTime*1000);
+//    
+//    NSDate* searchStartData = [NSDate date];
+//    [self loadData];
+//    double endTime = [[NSDate date] timeIntervalSinceDate:searchStartData];
+//    NSLog(@">>>>>>>>>>cost time = %f ms", endTime*1000);
 }
 
 -(void)testSmallData{
@@ -37,7 +39,8 @@
     [self loadData];
     
     //[self deleteData];
-    [self updateData];
+    [self updataWithNew];
+    //[self updateData];
     [self loadData];
 }
 
@@ -105,7 +108,7 @@
 }
 
 -(void)deleteData{
-    [RealmHelper deleteWithArray:@"ProvinceEntity"];
+    [RealmHelper deleteWithAll:@"ProvinceEntity"];
 }
 
 -(void)updateData{
@@ -114,6 +117,14 @@
         ProvinceEntity *province=[provinceArray firstObject];
         province.shortName=@"浙江";
     }];
+}
+
+-(void)updataWithNew{
+    [RealmHelper updataObject:@"ProvinceEntity"
+                        Where:@"" Block:^(RLMResults *result) {
+                            ProvinceEntity *province=[result firstObject];
+                            province.shortName=@"浙江";
+                        }];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -154,6 +165,7 @@
                     province.prefixLetter = dcInfo[@"PrefixLetter"];
                     
                     [[dic objectForKey:@"sheng"] setValue:province forKey:[NSString stringWithFormat:@"%d",province.sId]];
+                    
                 }
                     break;
                     
