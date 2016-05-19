@@ -16,7 +16,6 @@
  *  @param objectClassName 对象名称
  *  @return nil
  */
-
 +(void)deleteWithAll:(NSString*)objectClassName;
 
 /**根据对象名称和查询条件，删除数据库对应的对象
@@ -32,7 +31,6 @@
  *  @param Block 会传出查找到的结果，以供调用
  *  @return nil
  */
-
 +(void)updataObject:(NSString*)objectClassName where:(NSString *)predicateFormat Block:(void(^)(RLMResults* result))block;
 
 @end
