@@ -23,6 +23,11 @@
     [self testBigData];
     double deltaTime = [[NSDate date] timeIntervalSinceDate:tmpStartData];
     NSLog(@">>>>>>>>>>cost time = %f ms", deltaTime*1000);
+    
+    NSDate* searchStartData = [NSDate date];
+    [self loadData];
+    double endTime = [[NSDate date] timeIntervalSinceDate:searchStartData];
+    NSLog(@">>>>>>>>>>cost time = %f ms", endTime*1000);
     // Do any additional setup after loading the view, typically from a nib.
 }
 
@@ -126,10 +131,10 @@
     NSArray *JSONArr  = JSONResult[@"rows"];
     //一次性存入 -- JSONArr 有序 (根据json文件  可知:数组中排列必然是  省市区)
     
-//    NSMutableDictionary *dic = [[NSMutableDictionary dictionary] mutableCopy];
-//    //字典套字典(存放省市)
-//    [dic setValue:[[NSMutableDictionary dictionary] mutableCopy] forKey:@"sheng"];
-//    [dic setValue:[[NSMutableDictionary dictionary] mutableCopy] forKey:@"shi"];
+    NSMutableDictionary *dic = [[NSMutableDictionary dictionary] mutableCopy];
+    //字典套字典(存放省市)
+    [dic setValue:[[NSMutableDictionary dictionary] mutableCopy] forKey:@"sheng"];
+    [dic setValue:[[NSMutableDictionary dictionary] mutableCopy] forKey:@"shi"];
     
     for (NSDictionary *dcInfo in JSONArr){
         //省
@@ -148,10 +153,7 @@
                     province.enName = dcInfo[@"EnName"];
                     province.prefixLetter = dcInfo[@"PrefixLetter"];
                     
-                    //先把市存好
-                    [[RLMRealm defaultRealm] transactionWithBlock:^{
-                        [[RLMRealm defaultRealm] addObject:province];
-                    }];
+                    [[dic objectForKey:@"sheng"] setValue:province forKey:[NSString stringWithFormat:@"%d",province.sId]];
                 }
                     break;
                     
@@ -167,14 +169,12 @@
                     city.prefixLetter = dcInfo[@"PrefixLetter"];
                     
                     
-                    RLMResults<ProvinceEntity *>* provinceArray=[ProvinceEntity objectsWhere:@"sId==%d",city.pid];
-                    if(provinceArray&&[provinceArray firstObject])
+                    ProvinceEntity *province = [[dic objectForKey:@"sheng"] objectForKey:[NSString stringWithFormat:@"%d",city.pid]];
+                    if(province)
                     {
-                        ProvinceEntity* province=[provinceArray firstObject];
-                        [[RLMRealm defaultRealm] transactionWithBlock:^{
-                            [province.citys addObject:city];
-                        }];
+                        [province.citys addObject:city];
                     }
+                    [[dic objectForKey:@"shi"] setValue:city forKey:[NSString stringWithFormat:@"%d",city.sId]];
                 }
                     break;
                     
@@ -188,14 +188,10 @@
                     area.enName = dcInfo[@"EnName"];
                     area.prefixLetter = dcInfo[@"PrefixLetter"];
                     
-                    
-                    RLMResults<CityEntity *>* cityArray=[ProvinceEntity objectsWhere:@" sId == %d",area.pid];
-                    if(cityArray&&[cityArray firstObject])
+                    CityEntity *city = [[dic objectForKey:@"shi"] objectForKey:[NSString stringWithFormat:@"%d",area.pid]];
+                    if(city)
                     {
-                        CityEntity* city=[cityArray firstObject];
-                        [[RLMRealm defaultRealm] transactionWithBlock:^{
-                            [city.areas addObject:area];
-                        }];
+                        [city.areas addObject:area];
                     }
                     
                 }
@@ -203,8 +199,36 @@
                 default:
                     break;
             }
+            //先把市存好
+            
         }
     }
+    
+    
+    NSMutableDictionary* pDic=dic[@"sheng"];
+    
+    //排序
+    NSArray* array=[pDic.allKeys copy];
+    array=[array sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        if([obj1 integerValue]<[obj2 integerValue])
+        {
+            return  NSOrderedAscending;
+        }else if([obj1 integerValue]>[obj2 integerValue])
+        {
+            return  NSOrderedDescending;
+        }else
+        {
+            return  NSOrderedSame;
+        }
+    }];
+    
+    [[RLMRealm defaultRealm] transactionWithBlock:^{
+        for(int i=0;i<array.count;i++)
+        {
+            ProvinceEntity *province = [pDic objectForKey:array[i]];
+            [[RLMRealm defaultRealm] addObject:province];
+        }
+    }];
 }
 
 @end
