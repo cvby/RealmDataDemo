@@ -11,7 +11,18 @@
 @implementation RealmHelper
 
 +(void)deleteWithAll:(NSString*)objectClassName{
-    RLMResults* result=[[RLMRealm defaultRealm] allObjects:objectClassName];
+    [[self class] deleteObjects:objectClassName where:@""];
+}
+
++(void)deleteObjects:(NSString*)objectClassName where:(NSString *)predicateFormat{
+    RLMResults* result=nil;
+    if(predicateFormat.length>0)
+    {
+        result=[[RLMRealm defaultRealm] objects:objectClassName where:predicateFormat];
+    }else
+    {
+        result=[[RLMRealm defaultRealm] allObjects:objectClassName];
+    }
     [[RLMRealm defaultRealm] transactionWithBlock:^{
         [[RLMRealm defaultRealm] deleteObjects:result];
     }];
