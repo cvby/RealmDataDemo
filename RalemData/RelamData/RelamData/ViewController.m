@@ -148,11 +148,9 @@
     [dic setValue:[[NSMutableDictionary dictionary] mutableCopy] forKey:@"shi"];
     
     for (NSDictionary *dcInfo in JSONArr){
-        //省
         NSNumber *nType = [dcInfo objectForKey:@"Type"];
         if (nType) {
             switch ([nType integerValue]) {
-                    
                 case 2://省
                 {
                     ProvinceEntity *province = [[ProvinceEntity alloc]init];
@@ -166,9 +164,7 @@
                     
                     [[dic objectForKey:@"sheng"] setValue:province forKey:[NSString stringWithFormat:@"%d",province.sId]];
                     
-                }
-                    break;
-                    
+                }break;
                 case 3://市
                 {
                     CityEntity *city = [[CityEntity alloc]init];
@@ -187,9 +183,7 @@
                         [province.citys addObject:city];
                     }
                     [[dic objectForKey:@"shi"] setValue:city forKey:[NSString stringWithFormat:@"%d",city.sId]];
-                }
-                    break;
-                    
+                }break;
                 case 4://区
                 {
                     AreaEntity *area = [[AreaEntity alloc]init];;
@@ -206,13 +200,9 @@
                         [city.areas addObject:area];
                     }
                     
-                }
-                    break;
-                default:
-                    break;
+                }break;
+                default:break;
             }
-            //先把市存好
-            
         }
     }
     
