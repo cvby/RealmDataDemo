@@ -121,7 +121,7 @@
 
 -(void)updataWithNew{
     [RealmHelper updataObject:@"ProvinceEntity"
-                        Where:@"" Block:^(RLMResults *result) {
+                        where:@"" Block:^(RLMResults *result) {
                             ProvinceEntity *province=[result firstObject];
                             province.shortName=@"浙江";
                         }];
